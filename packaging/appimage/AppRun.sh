@@ -87,6 +87,8 @@ install_app() {
 	cp -f "$share/$APP_ID.svg" "$icon_dir/$APP_ID.svg"
 	command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database -q "$apps_dir" || :
 	command -v kbuildsycoca6 >/dev/null 2>&1 && kbuildsycoca6 >/dev/null 2>&1 || :
+	command -v kbuildsycoca5 >/dev/null 2>&1 && kbuildsycoca5 >/dev/null 2>&1 || :
+	command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -q -t -f "$data_home/icons/hicolor" 2>/dev/null || :
 
 	say "Installing the systemd user unit"
 	mkdir -p "$unit_dir"
@@ -116,6 +118,21 @@ install_app() {
 			say "Restarting the running smartconnectd on the new version"
 			systemctl --user restart smartconnectd.service
 		fi
+	else
+		autostart_dir=$config_home/autostart
+		if [ "$enable" = 1 ]; then
+			say "Installing XDG autostart entry (non-systemd user session)"
+			mkdir -p "$autostart_dir"
+			cat <<-AUTOF > "$autostart_dir/smartconnectd.desktop"
+			[Desktop Entry]
+			Type=Application
+			Name=Smart Connect Daemon
+			Exec=$opt_dir/bin/smartconnectd
+			Terminal=false
+			NoDisplay=true
+			X-GNOME-Autostart-enabled=true
+			AUTOF
+		fi
 	fi
 
 	cat <<-EOF
@@ -133,7 +150,7 @@ uninstall_app() {
 	if have_user_manager; then
 		systemctl --user disable --now smartconnectd.service 2>/dev/null || :
 	fi
-	rm -f "$unit_dir/smartconnectd.service"
+	rm -f "$unit_dir/smartconnectd.service" "$config_home/autostart/smartconnectd.desktop"
 	have_user_manager && systemctl --user daemon-reload || :
 	for p in $PROGRAMS; do
 		# Only our own links: never a program installed another way under the same name.
@@ -147,7 +164,43 @@ uninstall_app() {
 	echo "and the Noctalia plugin ($plugin_dir) are left in place."
 }
 
+doctor_check() {
+	echo "Smart Connect for Linux — Preflight & Diagnostic Check"
+	echo "======================================================"
+	echo ""
+	echo "Desktop & Compositor:"
+	echo "  XDG_CURRENT_DESKTOP: ${XDG_CURRENT_DESKTOP:-unknown}"
+	echo "  WAYLAND_DISPLAY:     ${WAYLAND_DISPLAY:-none (X11?)}"
+	echo ""
+	echo "System Services & Tools:"
+	for cmd in avahi-daemon bluetoothctl systemctl wl-copy fusermount3; do
+		if command -v "$cmd" >/dev/null 2>&1; then
+			printf "  [ok] %-16s found\n" "$cmd"
+		else
+			printf "  [!]  %-16s MISSING\n" "$cmd"
+		fi
+	done
+	echo ""
+	echo "Hardware Video Acceleration (VA-API):"
+	if command -v vainfo >/dev/null 2>&1; then
+		vainfo 2>&1 | head -n 8 | sed 's/^/  /'
+	else
+		echo "  vainfo not found (install libva-utils to inspect VA-API drivers)"
+	fi
+	echo ""
+	echo "Kernel Modules:"
+	for mod in v4l2loopback vkms; do
+		if lsmod 2>/dev/null | grep -q "^$mod"; then
+			printf "  [ok] %-16s loaded\n" "$mod"
+		else
+			printf "  [-]  %-16s not loaded (optional: %s)\n" "$mod" "$([ "$mod" = "v4l2loopback" ] && echo "phone as webcam" || echo "Extend display on niri")"
+		fi
+	done
+	echo ""
+}
+
 case "$1" in
+	--doctor|doctor) doctor_check; exit 0 ;;
 	--install) install_app "$@"; exit 0 ;;
 	--uninstall) uninstall_app; exit 0 ;;
 	--appimage-add-env)

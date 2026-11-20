@@ -89,6 +89,12 @@ fi
 
 # ---- build ----
 if [ "$BUILD" = 1 ]; then
+  # On systems where development libraries are installed via Linuxbrew (e.g. Bazzite / Fedora Silverblue),
+  # ensure Linuxbrew's pkgconfig directories are in PKG_CONFIG_PATH.
+  if [ -d "/home/linuxbrew/.linuxbrew/lib/pkgconfig" ] && [[ ":${PKG_CONFIG_PATH:-}:" != *":/home/linuxbrew/.linuxbrew/lib/pkgconfig:"* ]]; then
+    export PKG_CONFIG_PATH="/home/linuxbrew/.linuxbrew/lib/pkgconfig:/home/linuxbrew/.linuxbrew/share/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+  fi
+
   command -v "$CARGO" >/dev/null 2>&1 || die "cargo not found: install Rust 1.88 or newer (rustup, or your distribution's rust package)"
   # The build needs these libraries' development files; say which package is missing before cargo
   # stops halfway with a pkg-config error.

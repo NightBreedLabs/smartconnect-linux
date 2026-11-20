@@ -16,7 +16,7 @@ TOOLS="wl-copy wl-paste avahi-publish avahi-browse xkbcli notify-send"
 # dozens of libraries). webrtcbin needs nice, dtls, srtp, sctp, rtp and rtpmanager.
 GST_PLUGINS="coreelements app typefindfunctions playback autodetect debug audioconvert audioresample
 	audiotestsrc volume videoconvertscale videorate videotestsrc videoparsersbad rtp rtpmanager webrtc
-	nice dtls srtp sctp opus x264 libav va pipewire pulseaudio opengl waylandsink video4linux2"
+	nice dtls srtp sctp opus x264 libav va pipewire pulseaudio opengl waylandsink video4linux2 taginject"
 
 echo "==> Packages"
 pacman -Syu --noconfirm --needed \
@@ -24,7 +24,7 @@ pacman -Syu --noconfirm --needed \
 	gtk4 libadwaita dbus fuse3 openssl \
 	gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly gst-libav \
 	gst-plugin-pipewire gst-plugin-va libnice pipewire libpulse \
-	mesa intel-media-driver libva \
+	mesa intel-media-driver libva libva-intel-driver libva-nvidia-driver \
 	wl-clipboard avahi libxkbcommon libnotify \
 	adwaita-icon-theme >/dev/null
 
@@ -87,7 +87,7 @@ export DESKTOP=/build/packaging/dev.smartconnect.Linux.desktop
 export ICON=/build/packaging/dev.smartconnect.Linux.svg
 export MAIN_BIN=smartconnect-gui
 export DEPLOY_GTK=1 DEPLOY_GSTREAMER=1 DEPLOY_OPENGL=1 DEPLOY_PIPEWIRE=1 DEPLOY_PULSE=1 DEPLOY_P11KIT=1
-export UPINFO="gh-releases-zsync|rudrahnpatel|smartconnect-linux|latest|*x86_64.AppImage.zsync"
+export UPINFO="gh-releases-zsync|NightBreedLabs|smartconnect-linux|latest|*x86_64.AppImage.zsync"
 export OUTPUT_APPIMAGE=1
 # The programs need a phone, a session bus and a compositor; there is none here, so only a short
 # trace run each (the GStreamer plugins and VA drivers are passed explicitly instead).
