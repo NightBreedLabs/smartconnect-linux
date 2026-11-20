@@ -37,6 +37,12 @@ Protocol pages by service:
 [webcam](protocol/webcam.md) ·
 [file exchange](protocol/file-exchange.md)
 
+## Artifact research
+
+- [Windows Smart Connect 9.0.4.003.000](research/windows-9.0.4.003.000.md): REA artifact
+  observations, Windows component boundaries, Linux comparison, recorded Wine startup failure,
+  evidence provenance and follow-up questions.
+
 ## Elsewhere in the repository
 
 - [CONTRIBUTING.md](../CONTRIBUTING.md): ground rules (documentation and privacy), the PR checklist

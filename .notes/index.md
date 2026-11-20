@@ -1,5 +1,7 @@
 # Notes index
 
+- [windows-9.0.4-review.md](windows-9.0.4-review.md) — REA inspection of the installed Windows app, Linux comparison, Wine startup evidence, protocol boundaries and documentation drift.
+
 References to `evidence-2026-10-20/` in these notes (and in some code comments) point to the
 author's private research folder: captures, logcats, decompiled output and raw specs. It is not
 published. The public protocol reference is [`docs/protocol/`](../docs/protocol/README.md).

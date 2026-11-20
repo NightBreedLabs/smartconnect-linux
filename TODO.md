@@ -25,8 +25,9 @@ and [docs/](docs/) for details.
     delete moves to the Trash). Left: a Noctalia panel entry; sharing without a front-end
     (daemon-supervised `serve`); creating/uploading files from the phone (Lenovo `CREATEPATH` + NFS
     writes); several shared folders.
-  - **Read caching** — every directory and file read is an NFS round-trip over TLS, so large folders
-    are slow; cache attributes and directory listings, and read ahead for big files.
+  - **Read caching** — ~~every directory and file read is an NFS round-trip over TLS~~ (done in
+    `files/src/fuse.rs`: per-open directory listing and readdirplus attribute caching with 30 s TTL,
+    kernel read-ahead requested). Follow-up: benchmark persistent content cache if needed.
   - **Lifecycle & UX** — ~~unmount on SIGINT/SIGTERM~~ (done: SIGINT/SIGTERM/SIGHUP unmount
     cleanly, lazily if busy), ~~a stable default mountpoint `~/Phone`~~ (done), ~~GUI/plugin
     button~~ (done), ~~re-handshake on reconnect~~ (done: the mount survives a phone reconnect or a
@@ -34,14 +35,10 @@ and [docs/](docs/) for details.
     `statfs` probe in the helper, the GTK app and the plugin). Left: the daemon spawning/supervising
     `smartconnect-files` itself (auto-mount without a front-end), and verifying the reconnect against
     a real phone (tested end to end against this crate's own NFS-over-TLS server).
-- **Clipboard images and files.** Control plane understood (service 9 file-list + PULL); the daemon
-  now recognises an incoming image/file clip but does not fetch it yet. The bytes move over **fex**
-  (service 2), which is now fully reverse-engineered and implemented for app icons: TLS pinned to
-  the advertised fingerprint, a WebSocket of `action`/`ack` text frames, `GET /download` of a zip,
-  `status` type 1 (see `docs/protocol/file-exchange.md` §3; the X25519/HKDF/Ed25519 crypto in the
-  older notes is the cloud path, not the LAN one). Left: send PULL for an image clip, catch the
-  service 2 `FileExSendData`, pull it with `smartconnect_fex::client::pull` (check whether clipboard
-  sends use the zip mode or the per-file `/downloadFile` mode), and put the image on the clipboard.
+- **Clipboard images and files.** ~~Incoming image clips are implemented~~ (done: incoming PULL,
+  outgoing offers, service 2 transfers, and image clipboard placement are implemented in
+  `src/clipboard.rs` and wired in `src/server.rs`). Left: general non-image file clipboard and drag/drop
+  support.
 - **Send and receive single files (fex).** The fex client can pull an offer (`smartconnect-fex
   pull`), but there's no way to send a file to the phone or to accept one the phone sends, and no UI.
 
