@@ -39,7 +39,11 @@ pub async fn serve(daemon: Arc<Daemon>) -> Result<()> {
         let daemon = daemon.clone();
         tokio::spawn(async move {
             if let Err(e) = handle(daemon, stream).await {
-                warn!("control: {e:#}");
+                let is_disconnect = e.root_cause().downcast_ref::<std::io::Error>()
+                    .is_some_and(|io| matches!(io.kind(), std::io::ErrorKind::BrokenPipe | std::io::ErrorKind::ConnectionReset));
+                if !is_disconnect {
+                    warn!("control: {e:#}");
+                }
             }
         });
     }

@@ -421,6 +421,10 @@ fn running_sessions(name: &str) -> Vec<Running> {
         let is_us = |a: &String| Path::new(a).file_name().and_then(|f| f.to_str()) == Some(name);
         if let Some(i) = args.iter().take(2).position(is_us) {
             let rest: Vec<String> = args[i + 1..].iter().filter(|a| !a.is_empty()).cloned().collect();
+            // One-off queries like --list-outputs or --help exit immediately and are not sessions.
+            if rest.iter().any(|a| matches!(a.as_str(), "--list-outputs" | "--help" | "-h" | "--version" | "-V")) {
+                continue;
+            }
             found.push(Running { pid, args: rest });
         }
     }
@@ -1939,6 +1943,23 @@ mod tests {
         let (_, state) = snap.log.unwrap();
         assert!(matches!(outcome(&state), Some(Outcome::Stopped(r)) if r == "stopped from this PC"));
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn query_command_not_detected_as_session() {
+        let dir = std::env::temp_dir().join(format!("smartconnect-gui-test-query-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let name = format!("fake-query-{}", std::process::id());
+        let bin = dir.join(&name);
+        std::fs::write(&bin, "#!/bin/sh\nsleep 1\n").unwrap();
+        std::fs::set_permissions(&bin, std::fs::Permissions::from_mode(0o755)).unwrap();
+
+        let mut child = Command::new(&bin).arg("--list-outputs").spawn().unwrap();
+        let found = running_sessions(&name);
+        let _ = child.kill();
+        let _ = child.wait();
+        let _ = std::fs::remove_dir_all(&dir);
+        assert!(found.is_empty(), "query command must not count as a running session: {found:?}");
     }
 
     #[test]

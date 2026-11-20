@@ -50,9 +50,13 @@ pub async fn handshake(our_fp: &str) -> Result<MountTarget> {
         "service": SERVICE_FILE_STATION,
         "data": { "ver": "1.0", "cmd": CMD_HANDSHAKE, "data": handshake_json },
     });
-    let mut send = UnixStream::connect(&path).await.context("opening a send connection to the daemon")?;
-    send.write_all(format!("{frame}\n").as_bytes()).await.context("sending the File Station handshake")?;
-    send.shutdown().await.ok();
+    let send = UnixStream::connect(&path).await.context("opening a send connection to the daemon")?;
+    let (send_rd, mut send_wr) = send.into_split();
+    send_wr.write_all(format!("{frame}\n").as_bytes()).await.context("sending the File Station handshake")?;
+    // Await the daemon's {"ok":true,...} response so the daemon write doesn't hit a broken pipe
+    let mut resp = String::new();
+    let mut send_reader = BufReader::new(send_rd);
+    let _ = send_reader.read_line(&mut resp).await;
 
     // Read frames until the phone's `type:1` server reply arrives (or we time out).
     let mut line = String::new();
