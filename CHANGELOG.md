@@ -13,6 +13,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The READM
 - The daemon keeps the PC's address on the phone's USB cable fixed: it creates the NetworkManager profile `smartconnect-phone-usb` (fixed MAC, never the default route) when it starts (NetworkManager then uses it on every plug-in) and moves an already-connected phone link onto it. `--no-cable-profile` turns this off.
 - Connection by USB cable: the phone's cable mode now connects. The daemon advertises `_readyfor._tcp` (what the phone looks for on the USB tethering link) and answers the phone on `/readyfor/rdp` with an invite carrying the cable address. Invites also list addresses on a phone's USB tethering link under `usb`. Verified on a motorola edge 70 max.
 - Troubleshooting: Android's Mouse keys setting makes keys such as u i o p j k l m move the phone's pointer when typing from the PC.
+- App and virtual-phone windows turn with the app: when the phone rotates the display, the viewer turns the picture upright and swaps the window's sides, and mouse input follows. The phone keeps sending the portrait frame and only reports the turn, so before this the picture stayed sideways. `SMARTCONNECT_MIRROR_ROTATION=off` or `invert` change it. Verified on a motorola edge 70 max.
 
 ### Fixed
 
